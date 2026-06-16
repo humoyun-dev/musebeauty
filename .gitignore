@@ -1,0 +1,43 @@
+# ─── Maxfiy ───
+.env
+*.env
+!.env.example
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ─── Mahalliy baza / fayllar ───
+*.db
+*.sqlite3
+dev.db
+media/
+uploads/
+
+# ─── Node / admin-panel ───
+node_modules/
+admin-panel/dist/
+admin-panel/.vite/
+website/out/
+
+# ─── Frontend statik build chiqishi (serverdagi nginx beradi) ───
+static/
+
+# ─── IDE / OS ───
+.vscode/
+.idea/
+.DS_Store
+*.log
+
+# ─── Backup ───
+backups/
+media/
+
+# Local-only compose override
+docker-compose.override.yml

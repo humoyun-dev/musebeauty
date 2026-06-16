@@ -1,0 +1,122 @@
+name: musebeauty
+
+# Bitta mashina, bitta ilova. Mo'ljal: 2 CPU / 2GB, lekin SWAP bilan ~1 CPU / 1GB da ham ishlaydi.
+#
+# TAMOYIL: RAM va CPU ga ERKINLIK — qattiq cgroup cheklovi (mem_limit / cpus) YO'Q.
+# Lekin har servis MINIMAL iz egallaydi, shuning uchun kam resursda ham erkin ishlaydi.
+#
+# Nega qattiq cheklov yo'q:
+#  • Servislar bo'sh RAM/CPU ga "burst" qila olishi kerak — cheklov buni to'sadi.
+#  • Qattiq mem_limit, host'da bo'sh RAM bo'lsa ham, konteynerni OOM bilan o'ldiradi.
+#  • CPU ni scheduler o'zi adolatli taqsimlaydi.
+#  • Soft mem_reservation ham qo'yilmagan — bitta ilovali mashinada keraksiz.
+#
+# Minimalni qanday ta'minlaymiz (ILOVA DARAJASIDA, cgroup emas):
+#  • postgres — kichik shared_buffers, max_connections=30, parallel query o'chiq, WAL cheklangan
+#  • redis    — --maxmemory 96mb (o'zini cheklaydi, diskka yozmaydi)
+#  • uvicorn  — 1 worker; SQLAlchemy pool kichik (pool_size≈5, max_overflow≈5)
+# Va sug'urta sifatida hostда SWAP yoqilgan bo'lsin (README ga qarang).
+
+services:
+  # ─────────────────────────── PostgreSQL ───────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # Past RAM ga moslangan PostgreSQL sozlamalari (ilova darajasi — cgroup emas).
+    # Maqsad: qat'iy band qilinadigan xotira KICHIK bo'lsin; qolganini OS page
+    # cache (burst qiluvchi, "erkin") bajarsin. Shunda bo'sh RAM bo'lsa tez,
+    # kam RAM bo'lsa ham ishlayveradi — hech narsa qattiq cheklanmaydi.
+    command:
+      - postgres
+      # — Qat'iy ajratiladigan qism kichik; tezlikni asosan OS page cache beradi.
+      #   effective_cache_size — ajratilgan xotira EMAS, faqat planner maslahati.
+      - -c
+      - shared_buffers=96MB
+      - -c
+      - effective_cache_size=256MB
+      - -c
+      - work_mem=4MB
+      - -c
+      - maintenance_work_mem=32MB
+      # — Ulanishlar: 1 uvicorn worker + bot + alembic ≈ 20–25 ta. Har ulanish
+      #   ~5–10MB. 50 emas, 30 — minimal mashinada ortiqcha RAM yemaydi.
+      - -c
+      - max_connections=30
+      # — 1–2 yadroli mashinada parallel query foyda emas (ortiqcha CPU/RAM) — o'chiq.
+      - -c
+      - max_parallel_workers_per_gather=0
+      - -c
+      - max_worker_processes=4
+      # — WAL disk o'sishini cheklaydi: kichik diskda shishib ketmaydi.
+      - -c
+      - max_wal_size=512MB
+      - -c
+      - min_wal_size=80MB
+      # — Kichik mashinada huge pages shart emas; log shovqinini ham oldini oladi.
+      - -c
+      - huge_pages=off
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────── Redis ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # O'zini 96MB bilan cheklaydi, eskilarini o'chiradi, diskka yozmaydi (keш/FSM)
+    command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+
+  # ────────────────────── Backend API (FastAPI) ─────────────────────
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    # Migratsiyani FAQAT shu konteyner bajaradi, keyin API ishga tushadi.
+    # 1 worker — async FastAPI kichik do'kon uchun yetarli va RAM tejaydi.
+    # Eslatma: kod yozilganda SQLAlchemy pool ham kichik tutilsin
+    # (pool_size≈5, max_overflow≈5) — postgres max_connections=30 ga mos.
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    expose:
+      - "8000"
+
+  # ─────────────────────── Telegram bot (aiogram) ───────────────────
+  bot:
+    build: ./backend          # api bilan bir xil image
+    restart: unless-stopped
+    env_file: .env
+    command: python -m app.bot   # long polling
+    depends_on:
+      api:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  # ──────────── Nginx: admin statik + reverse proxy + SSL ───────────
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile   # admin panelni build qilib, statik beradi
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/certs:/etc/nginx/certs:ro   # SSL sertifikatlar (fullchain.pem, privkey.pem)
+
+volumes:
+  pgdata:

@@ -1,0 +1,37 @@
+# ─── Web / API ───
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+# pydantic pinни bo'sh qoldiramiz — aiogram (<2.10) bilan fastapi/pydantic-settings
+# orasidagi mos versiyani pip o'zi tanlaydi (odatda 2.9.x).
+pydantic>=2.7,<2.10
+pydantic-settings>=2.5,<2.8
+
+# ─── Baza / ORM ───
+sqlalchemy[asyncio]==2.0.36
+alembic==1.14.0
+asyncpg==0.30.0          # PostgreSQL async drayveri (prod)
+aiosqlite==0.20.0        # SQLite async drayveri (mahalliy dev)
+
+# ─── Bot ───
+aiogram==3.15.0
+
+# ─── Kesh / FSM / savat ───
+redis==5.2.1
+
+# ─── Xavfsizlik (admin auth) ───
+python-jose[cryptography]==3.3.0   # JWT
+passlib[bcrypt]==1.7.4             # parol hash
+# bcrypt 4.1+ da passlib 1.7.4 versiya o'qiyolmay log noise beradi → 4.0.x pinlandi
+bcrypt==4.0.1
+
+# ─── Rejalashtiruvchi ───
+apscheduler==3.11.0
+pytz==2024.2                       # APScheduler timezone (Asia/Tashkent) uchun
+
+# ─── Yordamchi ───
+python-multipart==0.0.20           # FastAPI fayl yuklash (chek rasmlari)
+httpx==0.28.1                      # tashqi API (Yandex/Payme keyin)
+# Cloudflare R2 (S3-mos) rasm saqlash.
+# <1.36 da pinlandi: 1.36+ standart CRC32 "integrity checksum" qo'shib,
+# R2 put_object'da xato beradi. 1.35.x — R2 bilan ma'lum ishlaydigan xulq.
+boto3>=1.35,<1.36
