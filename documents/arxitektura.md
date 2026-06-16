@@ -74,9 +74,9 @@ Tizimning markazida **bitta backend va bitta ma'lumotlar bazasi** turadi. Bot, w
 | Admin panel | React + Refine (yoki React-Admin) | **Alohida ilova**, `api/admin` ga ulanadi |
 | — muqobil | Tooljet / Appsmith (low-code) | Eng tez yo'l, kam kod |
 | Website | Next.js | 2-bosqichda |
-| Rasm saqlash | Disk → keyin MinIO/S3 | Mahsulot rasmlari |
-| Reverse proxy | Nginx | |
-| Deployment | Docker + docker-compose | |
+| Rasm saqlash | Cloudflare R2 (S3-mos) | Mahsulot rasmlari, to'g'ridan public URL |
+| Reverse proxy | Nginx (host darajasida, Docker tashqarisida) | API'ni `127.0.0.1:8000` ga proxy + SSL |
+| Deployment | Docker + docker-compose | nginx Docker ichida emas |
 
 ---
 
@@ -343,24 +343,27 @@ To'liq boshqaruv esa — alohida admin saytida (brauzer).
 ## 11. Deployment (2 CPU / 2GB RAM uchun)
 
 ```
-docker-compose:
-  ├── api          (FastAPI — api/public + api/admin)
+docker-compose (nginx Docker ichida EMAS):
+  ├── api          (FastAPI — api/public + api/admin), faqat 127.0.0.1:8000 ga ochiq
   ├── bot          (aiogram, long polling)        ← api bilan bir xil image
   ├── postgres     (past resursga sozlangan)
   ├── redis        (maxmemory 96mb)
   ├── backup       (kunlik pg_dump)
-  ├── website      (Next.js → statik build → website_static volume) ← bir martalik
-  ├── admin-panel  (React/Vite → statik build → admin_static volume) ← bir martalik
-  └── nginx        (statikni volume'dan beradi + reverse proxy + SSL)
-                    ├── musebeauty.uz        → website (statik) + api/public
-                    └── admin.musebeauty.uz  → admin (statik) + api/admin
+  ├── website      (Next.js → statik build → ./static/website) ← bir martalik
+  └── admin-panel  (React/Vite → statik build → ./static/admin)  ← bir martalik
+
+host nginx (Docker tashqarisida, serverga qo'lda o'rnatiladi):
+  ├── musebeauty.uz        → ./static/website (statik) + /api → 127.0.0.1:8000
+  └── admin.musebeauty.uz  → ./static/admin   (statik) + /api → 127.0.0.1:8000
 ```
 
-`website` va `admin-panel` — **bir martalik build servislari**: statikni umumiy
-volume'ga ko'chirib to'xtaydi (runtime'da Node ishlamaydi). nginx ularni shu
-volume'lardan beradi va build tugashini kutadi (`service_completed_successfully`).
+`website` va `admin-panel` — **bir martalik build servislari**: statikni host
+papkalarga (`./static/website`, `./static/admin`) bind-mount orqali ko'chirib
+to'xtaydi (runtime'da Node ishlamaydi). Serverdagi (host) nginx shu papkalarni
+to'g'ridan beradi. API esa faqat `127.0.0.1:8000` ga ochiladi (internetga
+to'g'ridan emas) — host nginx unga `/api` ni proxy qiladi.
 
-**Admin panel — alohida ilova, samarali serviring.** Admin o'z repo'sida, o'z React build'i bilan mustaqil ishlanadi (alohida deploy qilinadi). Lekin 2GB RAM cheklovi tufayli production'da Node serveri ishlamaydi — `npm run build` natijasi (statik fayllar) Nginx orqali beriladi. Shunday qilib admin ham alohida bo'ladi, ham deyarli RAM yemaydi.
+**Admin panel — alohida ilova, samarali serviring.** Admin o'z repo'sida, o'z React build'i bilan mustaqil ishlanadi (alohida deploy qilinadi). Lekin 2GB RAM cheklovi tufayli production'da Node serveri ishlamaydi — `npm run build` natijasi (statik fayllar) `./static/admin` ga chiqadi va host nginx orqali beriladi. Shunday qilib admin ham alohida bo'ladi, ham deyarli RAM yemaydi.
 
 **Bot — long polling.** Webhook va undagi HTTPS shartini chetlab o'tadi; sozlash sodda. SSL faqat admin/website uchun kerak.
 
@@ -382,7 +385,7 @@ Real ishlatish ~500–800M. Mo'ljal 2 CPU / 2GB, ammo **swap** bilan ~1 CPU / 1G
 da ham erkin ishlaydi. Bo'sh RAM/CPU bo'lsa — avtomatik foydalanadi (cheklov yo'q).
 
 - Migratsiya: faqat `api` konteyner bajaradi (`alembic upgrade head`)
-- SSL: certbot (Nginx orqali) yoki Cloudflare Origin sertifikat
+- SSL: serverdagi (host) nginx orqali `sudo certbot --nginx -d ...` (Let's Encrypt) yoki Cloudflare Origin sertifikat
 - Backup: PostgreSQL kunlik `pg_dump` (cron)
 - **Build ogohlantirishi:** React build 2GB'da tig'iz bo'lishi mumkin → swap qo'shing yoki image'ni CI/kuchliroq mashinada build qiling. Runtime 2GB'da bemalol.
 

@@ -1,7 +1,7 @@
 # MUSE BEAUTY — Website (Next.js)
 
 Mijozlar uchun do'kon (storefront). Backendning `api/public` endpointlariga
-ulanadi. **Statik eksport** — production'da Nginx beradi (Node serveri yo'q, RAM tejaladi).
+ulanadi. **Statik eksport** — production'da serverdagi (host) nginx beradi (Node serveri yo'q, RAM tejaladi).
 
 ## Sahifalar
 
@@ -25,11 +25,13 @@ Backend ishlab turishi kerak (`docker compose up`), `make seed` bilan ma'lumot.
 ## Production build
 
 ```bash
-npm run build              # out/ — statik fayllar (Nginx beradi)
+npm run build              # out/ — statik fayllar (host nginx beradi)
 ```
 
-Odatda qo'lда qilinmaydi: `nginx/Dockerfile` build bosqichida shu papkani
-build qilib, natijani `musebeauty.uz` da beradi.
+Odatda qo'lда qilinmaydi: Docker'dagi bir-martalik `website` build servisi shu
+papkani build qilib, natijani host papka `./static/website` ga chiqaradi.
+Serverdagi (host) nginx esa uni `musebeauty.uz` da to'g'ridan beradi
+(`make front` bilan qayta build qilinadi).
 
 ## Texnologiya
 

@@ -23,7 +23,7 @@ Go'zallik mahsulotlari uchun onlayn do'kon platformasi: **Telegram bot** (xarid)
 | Admin panel | React, Vite, Refine, Ant Design |
 | Rejalashtirish | APScheduler |
 | Saqlash | disk / Cloudflare R2 (boto3) |
-| Infratuzilma | Docker Compose, nginx |
+| Infratuzilma | Docker Compose (nginx server'da, Docker tashqarisida) |
 
 ## Tuzilma
 
@@ -31,7 +31,7 @@ Go'zallik mahsulotlari uchun onlayn do'kon platformasi: **Telegram bot** (xarid)
 backend/          FastAPI + aiogram bot (app/), Alembic migratsiyalari
 admin-panel/      React (Vite + Refine + AntD) admin
 website/          Vitrina sayt
-nginx/            Reverse proxy + static
+static/           Frontend statik build chiqishi (server'dagi nginx beradi)
 scripts/          backup / restore
 documents/        Arxitektura, deploy, reja
 docker-compose.yml

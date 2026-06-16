@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { Bag, Search, Menu, Close } from "@/components/Icons";
+import { BrandEmblem } from "@/components/BrandEmblem";
 
 const NAV = [
   { href: "/catalog/", label: "Katalog" },
@@ -72,12 +73,7 @@ export function Header() {
 
           {/* Markaz: logotip — emblem (logo rasmi) + wordmark */}
           <Link href="/" className="group inline-flex select-none items-center justify-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.jpg"
-              alt="MUSE BEAUTY logotipi"
-              className="h-9 w-9 shrink-0 rounded-full object-cover shadow-soft ring-1 ring-rose-200/70 transition-transform duration-500 group-hover:scale-105 sm:h-11 sm:w-11"
-            />
+            <BrandEmblem className="h-9 w-9 shadow-soft transition-transform duration-500 group-hover:scale-105 sm:h-11 sm:w-11" />
             <span className="leading-none">
               <span className="block font-serif text-[16px] font-medium uppercase leading-none tracking-[0.22em] text-ink sm:text-[19px]">
                 <span className="ml-[0.22em]">Muse</span>

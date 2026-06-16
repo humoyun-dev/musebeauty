@@ -1,7 +1,7 @@
 # MUSE BEAUTY — Admin panel
 
 React + Refine + Ant Design. Backendning `api/admin` endpointlariga ulanadi.
-Alohida ilova — production'da Nginx statik fayllarni beradi (Node serveri yo'q).
+Alohida ilova — production'da serverdagi (host) nginx statik fayllarni beradi (Node serveri yo'q).
 
 ## Mahalliy dev
 
@@ -23,8 +23,10 @@ docker compose exec api python -m app.create_admin admin "Parol123" superadmin
 npm run build              # dist/ — statik fayllar
 ```
 
-Bu odatda qo'lда qilinmaydi: `nginx/Dockerfile` build bosqichida shu papkani
-o'zi build qilib, natijani Nginx orqali `admin.musebeauty.uz` da beradi.
+Bu odatda qo'lда qilinmaydi: Docker'dagi bir-martalik `admin-panel` build servisi
+shu papkani build qilib, natijani host papka `./static/admin` ga chiqaradi.
+Serverdagi (host) nginx esa shu papkani `admin.musebeauty.uz` da to'g'ridan beradi
+va `make front` bilan statik qayta build qilinadi.
 
 ## Tuzilma
 

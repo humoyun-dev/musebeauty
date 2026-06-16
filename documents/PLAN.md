@@ -33,7 +33,7 @@ Kod yozishdan oldin shularni hal qiling:
 
 **Maqsad:** bo'sh, lekin to'liq ishlaydigan skelet.
 
-- [x] Repo tuzilmasi: `backend/`, `admin-panel/`, `nginx/`
+- [x] Repo tuzilmasi: `backend/`, `admin-panel/`, `website/`, `static/` (nginx Docker ichida emas — host darajasida)
 - [x] Docker setup (tayyor — `docker-compose.yml`, Dockerfile'lar, `.env.example`)
 - [x] `core/`: config (pydantic-settings), database (async engine), security (JWT), redis
 - [x] **Barcha SQLAlchemy modellari** (14 jadval, audit_log ham qo'shildi):
@@ -134,19 +134,20 @@ oshdi; foyda hisobi to'g'ri (200 000 − 40 000 − 120 000 = 40 000). Admin pan
 
 **Maqsad:** barqaror, xavfsiz, onlayn.
 
-- [x] SSL: certbot (webroot) — moslashuvchi nginx config + `scripts/init-ssl.sh`
+- [x] SSL: serverdagi (host) nginx orqali `sudo certbot --nginx -d ...` (Let's Encrypt)
 - [x] PostgreSQL avtomatik backup (kunlik `pg_dump`, `backup` servis + 14 nusxa rotatsiya)
 - [~] Yandex yetkazib berish — hozircha qo'lда (dizayn bo'yicha; API keyin `DeliveryService`)
 - [x] Payme/Click integratsiyasi (avtomatik to'lov tasdiq — Payme JSON-RPC, Click imzo)
-- [x] **Website (Next.js)** — `api/public` ustida (statik eksport, nginx beradi)
-- [x] Rasm saqlash: disk (`/media`, nginx beradi) + S3-ready interfeys (MinIO keyin)
+- [x] **Website (Next.js)** — `api/public` ustida (statik eksport → `./static/website`, host nginx beradi)
+- [x] Rasm saqlash: Cloudflare R2 (`STORAGE_BACKEND=s3`, to'g'ridan `pub-...r2.dev` public URL) + S3-mos interfeys (disk rejimi ham mavjud)
 - [x] Monitoring: api healthcheck (`/health`), `make logs`/`ps`, scheduler hisobotlari
 
-**Tugadi ✅** (2026-06-16, Docker'da tasdiqlangan): rasm yuklash (disk + /media),
-Payme (CheckPerform→Create→Perform → buyurtma avtomatik 'tolandi', auth/summa
-xatolari, idempotent), Click (prepare/complete imzo tekshiruvi), **Website**
-(Next.js storefront: katalog→savat→checkout→web-order, 9 sahifa statik build).
-SSL config sertifikat bor/yo'qligiga moslashadi, backup + restore tayyor.
+**Tugadi ✅** (2026-06-16, Docker'da tasdiqlangan): rasm yuklash (Cloudflare R2,
+to'g'ridan public URL), Payme (CheckPerform→Create→Perform → buyurtma avtomatik
+'tolandi', auth/summa xatolari, idempotent), Click (prepare/complete imzo
+tekshiruvi), **Website** (Next.js storefront: katalog→savat→checkout→web-order,
+9 sahifa statik build → `./static/website`). SSL host nginx + certbot orqali,
+backup + restore tayyor.
 Qoldi: Yandex Delivery API, MinIO/S3 — ixtiyoriy keyingi yaxshilashlar.
 
 ---

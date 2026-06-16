@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Telegram, Instagram, Check, Spark, Sprig } from "@/components/Icons";
+import { BrandEmblem } from "@/components/BrandEmblem";
 
 const COLUMNS = [
   {
@@ -81,12 +82,7 @@ export function Footer() {
         {/* Brend */}
         <div>
           <div className="flex items-center gap-3.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.jpg"
-              alt="MUSE BEAUTY logotipi"
-              className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-porcelain/20"
-            />
+            <BrandEmblem className="h-14 w-14 ring-porcelain/20" />
             <div>
               <Link
                 href="/"

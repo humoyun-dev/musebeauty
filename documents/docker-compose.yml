@@ -89,8 +89,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    expose:
-      - "8000"
+    # API to'g'ridan portda. Faqat host'ga (127.0.0.1) bog'lanadi — internetga
+    # to'g'ridan ochilmaydi; serverdagi nginx (host darajasida) shu portga proxy
+    # qiladi va SSL'ni bajaradi. To'liq ochish kerak bo'lsa "127.0.0.1:" ni oling.
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - media:/app/media        # yuklangan rasmlar (STORAGE_BACKEND=disk bo'lsa)
+    # /health endpoint orqali tiriklik tekshiruvi (curl yo'q — python bilan)
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
 
   # ─────────────────────── Telegram bot (aiogram) ───────────────────
   bot:
@@ -104,19 +116,36 @@ services:
       redis:
         condition: service_started
 
-  # ──────────── Nginx: admin statik + reverse proxy + SSL ───────────
-  nginx:
-    build:
-      context: .
-      dockerfile: nginx/Dockerfile   # admin panelni build qilib, statik beradi
-    restart: unless-stopped
-    depends_on:
-      - api
-    ports:
-      - "80:80"
-      - "443:443"
+  # ──────── Admin panel (React) — statikni build qilib host papkaga beradi ────────
+  # Bir martalik build konteyner: dist'ni ./static/admin ga ko'chiradi va tugaydi.
+  # Serverdagi nginx shu papkani to'g'ridan beradi (admin.musebeauty.uz).
+  admin-panel:
+    build: ./admin-panel
     volumes:
-      - ./nginx/certs:/etc/nginx/certs:ro   # SSL sertifikatlar (fullchain.pem, privkey.pem)
+      - ./static/admin:/output
+
+  # ──────── Website (Next.js) — statikni build qilib host papkaga beradi ────────
+  # ./static/website — serverdagi nginx shu papkani beradi (musebeauty.uz).
+  website:
+    build: ./website
+    volumes:
+      - ./static/website:/output
+
+  # ──────────────── Kunlik PostgreSQL backup (pg_dump) ───────────────
+  backup:
+    image: postgres:16-alpine   # pg_dump shu yerda bor
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+      - dbbackups:/backups
+    # Har 24 soatda backup; oxirgi 14 tasi saqlanadi (scripts/backup.sh)
+    entrypoint: ["sh", "-c", "while true; do /scripts/backup.sh || echo 'backup XATO'; sleep 86400; done"]
 
 volumes:
   pgdata:
+  media:
+  dbbackups:

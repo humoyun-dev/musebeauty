@@ -16,14 +16,17 @@ docker/
 │       ├── main.py      # FastAPI ilovasi (api uchun)
 │       ├── bot.py       # `python -m app.bot` (bot uchun)
 │       └── ...
-├── admin-panel/         # React (Vite) admin — nginx build qiladi
+├── admin-panel/         # React (Vite) admin — Docker build servisi statikni chiqaradi
 │   ├── package.json
 │   └── src/
-└── nginx/
-    ├── Dockerfile
-    ├── default.conf
-    └── certs/           # fullchain.pem va privkey.pem shu yerda
+└── static/              # build servislari chiqaradi (host nginx beradi)
+    ├── website/         # Next.js statik build → musebeauty.uz
+    └── admin/           # Vite statik build → admin.musebeauty.uz
 ```
+
+> nginx Docker ichida emas. Serverga (host darajasida) nginx qo'lda
+> o'rnatiladi: `./static/website` va `./static/admin` papkalarini beradi
+> hamda `/api` ni `127.0.0.1:8000` ga proxy qiladi.
 
 > `backend/app/` va `admin-panel/src/` ichidagi kod hali yozilmagan —
 > bu fayllar shu kod uchun infratuzilma. Keyingi qadamda kodni yozamiz.
@@ -45,15 +48,15 @@ docker compose up -d --build
 
 ## SSL sertifikat (bot polling bo'lгани uchun shart emas, lekin admin/website uchun kerak)
 
+SSL serverdagi (host) nginx darajasida boshqariladi — Docker ichida emas.
+
 Eng oson ikki yo'l:
 
-1. **Certbot (standalone)** — bir marta sertifikat oling, natijani
-   `nginx/certs/` ga `fullchain.pem` va `privkey.pem` nomi bilan qo'ying.
+1. **Certbot (host nginx bilan)** — serverda nginx o'rnatilgandan keyin
+   `sudo certbot --nginx -d musebeauty.uz -d admin.musebeauty.uz` buyrug'i
+   sertifikatni oladi va nginx config'ini avtomatik sozlaydi (Let's Encrypt).
 2. **Cloudflare** — domenni Cloudflare orqali yo'naltirib, Origin
    sertifikatdan foydalaning (eng kam ovoragarchilik).
-
-Sertifikatsiz sinab ko'rmoqchi bo'lsangiz, `default.conf` dagi `443` ssl
-bloklarini vaqtincha `80` ga o'tkazib turing.
 
 ## Muhim: kam RAM'da build
 
