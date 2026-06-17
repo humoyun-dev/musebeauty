@@ -5,7 +5,7 @@ tiplarini tekshiradi. Bir joyda — boshqa modullar shu `settings` ni import qil
 """
 from functools import lru_cache
 
-from pydantic import Field, computed_field
+from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

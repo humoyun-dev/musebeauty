@@ -18,7 +18,6 @@ from app.models.base import (
     MoneyT,
     PromoType,
     Scope,
-    TimestampMixin,
 )
 
 

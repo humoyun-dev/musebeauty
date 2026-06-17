@@ -1,0 +1,102 @@
+name: CI/CD
+
+# CI har push va PR'da; CD faqat main'ga push'da (CI o'tgach).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────── Backend (FastAPI + bot) ───────────────
+  backend:
+    name: Backend (lint · compile · migrations)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Bog'lamalarni o'rnatish
+        run: pip install -r backend/requirements.txt ruff
+      - name: Ruff (haqiqiy xatolar — sintaksis, undefined, unused)
+        run: ruff check --select E9,F --output-format=github backend/app
+      - name: Compile (sintaksis smoke)
+        run: python -m compileall -q backend/app
+      - name: Alembic — bitta head (migration konflikti yo'q)
+        working-directory: backend
+        run: |
+          n=$(alembic heads 2>/dev/null | grep -c '(head)')
+          echo "Migration headlar: $n"
+          [ "$n" = "1" ] || { echo "::error::Bir nechta migration head — daraxt ajralgan"; exit 1; }
+
+  # ─────────────── Admin panel (Vite + React) ───────────────
+  admin:
+    name: Admin (typecheck · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-panel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: admin-panel/package-lock.json
+      - run: npm ci
+      - name: Build (tsc + vite)
+        run: npm run build
+
+  # ─────────────── Website (Next.js) ───────────────
+  website:
+    name: Website (build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - run: npm ci
+      - name: Build (next build → static export)
+        run: npm run build
+
+  # ─────────────── Deploy (faqat main, CI o'tgach) ───────────────
+  deploy:
+    name: Deploy → production
+    needs: [backend, admin, website]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: https://musebeauty.uz
+    steps:
+      - uses: actions/checkout@v4
+      - name: SSH kalit + known_hosts
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+      - name: Serverda deploy
+        run: |
+          ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" 'bash -s' < scripts/ci-deploy.sh

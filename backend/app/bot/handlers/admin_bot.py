@@ -15,7 +15,7 @@ from app.bot.keyboards.admin import (
 )
 from app.core.database import SessionLocal
 from app.core.utils import format_money
-from app.models import Customer, Order, OrderStatus
+from app.models import Customer, Order
 from app.services import location as location_service
 from app.services import order as order_service
 from app.services import payment as payment_service

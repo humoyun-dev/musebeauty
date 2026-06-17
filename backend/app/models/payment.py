@@ -5,7 +5,7 @@ Admin panelda tasdiqlangach is_confirmed=true bo'ladi va buyurtma "to'landi"ga o
 """
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base

@@ -1,5 +1,5 @@
 """Katalog uchun inline klaviaturalar."""
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.core.utils import format_money

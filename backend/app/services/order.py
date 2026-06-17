@@ -66,7 +66,7 @@ async def create_order_from_cart(
     foydaliroq bo'lsa) qo'llaydi va promo_redemptions ga yozadi. Promokod commit
     paytida QAYTA tekshiriladi (race oldini olish) — yaroqsiz bo'lsa PromoError.
     """
-    from app.services.promo import PromoError, PromoValidation, validate_promo
+    from app.services.promo import PromoValidation, validate_promo
 
     if not items:
         raise EmptyCart()

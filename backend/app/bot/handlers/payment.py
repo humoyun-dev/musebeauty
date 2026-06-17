@@ -10,7 +10,6 @@ from app.bot.states import Checkout
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.utils import format_money
-from app.services import notify as notify_service
 from app.services import payment as payment_service
 
 router = Router(name="payment")

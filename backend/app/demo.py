@@ -20,7 +20,7 @@ from app.models import (
     Order,
     PaymeTransaction,  # noqa: F401  (metadata to'liq bo'lishi uchun)
     Product,
-    Payment,
+    Payment,  # noqa: F401  (metadata to'liq bo'lishi uchun)
     PromoCode,
 )
 from app.services import admin as admin_service
