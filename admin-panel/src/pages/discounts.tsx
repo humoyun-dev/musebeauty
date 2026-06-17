@@ -8,8 +8,9 @@ import {
   useForm,
   useTable,
 } from "@refinedev/antd";
-import { Form, Input, InputNumber, Select, Space, Switch, Table, Tag } from "antd";
+import { Form, Input, Select, Space, Switch, Table, Tag } from "antd";
 
+import { NumberInput } from "../components/inputs";
 import { money, SCOPE_LABELS } from "../lib/format";
 
 interface IDiscount {
@@ -124,13 +125,13 @@ const DiscountForm = () => (
       <Select options={TYPE_OPTIONS} />
     </Form.Item>
     <Form.Item label="Qiymat" name="value" rules={[{ required: true }]} help="Foiz uchun 1–100, summa uchun so'm">
-      <InputNumber style={{ width: "100%" }} min={0} />
+      <NumberInput />
     </Form.Item>
     <Form.Item label="Qamrov" name="scope" initialValue="all">
       <Select options={SCOPE_OPTIONS} />
     </Form.Item>
     <Form.Item label="Maqsad ID" name="target_id" help="Qamrov=kategoriya/mahsulot bo'lsa: tegishli ID">
-      <InputNumber style={{ width: "100%" }} min={1} />
+      <NumberInput min={1} />
     </Form.Item>
     <Form.Item label="Faol" name="is_active" valuePropName="checked" initialValue={true}>
       <Switch />

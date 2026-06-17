@@ -4,13 +4,13 @@ import {
   Button,
   Form,
   Input,
-  InputNumber,
   Select,
   Space,
   Table,
   Typography,
 } from "antd";
 
+import { MoneyInput, NumberInput } from "../components/inputs";
 import { money } from "../lib/format";
 
 const { Text } = Typography;
@@ -81,14 +81,14 @@ export const SupplyCreate = () => {
                     name={[name, "qty"]}
                     rules={[{ required: true, message: "Miqdor" }]}
                   >
-                    <InputNumber min={1} placeholder="Miqdor" />
+                    <NumberInput min={1} placeholder="Miqdor" style={{ width: 120 }} />
                   </Form.Item>
                   <Form.Item
                     {...rest}
                     name={[name, "unit_cost"]}
                     rules={[{ required: true, message: "Dona tannarx" }]}
                   >
-                    <InputNumber min={0} step={1000} placeholder="Dona tannarx" />
+                    <MoneyInput placeholder="Dona tannarx" style={{ width: 200 }} />
                   </Form.Item>
                   {fields.length > 1 && (
                     <MinusCircleOutlined onClick={() => remove(name)} />

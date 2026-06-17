@@ -8,8 +8,9 @@ import {
   useForm,
   useTable,
 } from "@refinedev/antd";
-import { Form, Input, InputNumber, Select, Space, Switch, Table, Tag } from "antd";
+import { Form, Input, Select, Space, Switch, Table, Tag } from "antd";
 
+import { MoneyInput, NumberInput } from "../components/inputs";
 import { money, SCOPE_LABELS } from "../lib/format";
 
 interface IPromo {
@@ -133,19 +134,19 @@ const PromoForm = () => (
       <Select options={TYPE_OPTIONS} />
     </Form.Item>
     <Form.Item label="Qiymat" name="value" help="Foiz uchun 1–100, summa uchun so'm. Bepul yetkazib uchun 0.">
-      <InputNumber style={{ width: "100%" }} min={0} />
+      <NumberInput />
     </Form.Item>
     <Form.Item label="Minimal buyurtma summasi" name="min_order_amount" initialValue={0}>
-      <InputNumber style={{ width: "100%" }} min={0} step={1000} />
+      <MoneyInput />
     </Form.Item>
     <Form.Item label="Maksimal chegirma (foiz uchun)" name="max_discount">
-      <InputNumber style={{ width: "100%" }} min={0} step={1000} />
+      <MoneyInput />
     </Form.Item>
     <Form.Item label="Umumiy limit" name="usage_limit" help="Bo'sh = cheksiz">
-      <InputNumber style={{ width: "100%" }} min={1} />
+      <NumberInput min={1} />
     </Form.Item>
     <Form.Item label="Bir mijozga limit" name="per_user_limit" help="Bo'sh = cheksiz">
-      <InputNumber style={{ width: "100%" }} min={1} />
+      <NumberInput min={1} />
     </Form.Item>
     <Form.Item label="Faqat birinchi buyurtma" name="first_order_only" valuePropName="checked" initialValue={false}>
       <Switch />
@@ -154,7 +155,7 @@ const PromoForm = () => (
       <Select options={SCOPE_OPTIONS} />
     </Form.Item>
     <Form.Item label="Maqsad ID" name="target_id" help="Qamrov=kategoriya/mahsulot bo'lsa: tegishli ID">
-      <InputNumber style={{ width: "100%" }} min={1} />
+      <NumberInput min={1} />
     </Form.Item>
     <Form.Item label="Faol" name="is_active" valuePropName="checked" initialValue={true}>
       <Switch />

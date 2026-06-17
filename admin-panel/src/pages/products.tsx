@@ -15,7 +15,6 @@ import {
   Form,
   Image,
   Input,
-  InputNumber,
   Select,
   Space,
   Switch,
@@ -33,6 +32,7 @@ import {
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 
+import { MoneyInput, NumberInput } from "../components/inputs";
 import { money } from "../lib/format";
 import { uploadImage } from "../providers/apiClient";
 
@@ -283,17 +283,17 @@ const ProductForm = () => {
       </Form.Item>
       <ImageField />
       <Form.Item
-        label="Narx (so'm)"
+        label="Narx"
         name="price"
         rules={[{ required: true, message: "Narx kiriting" }]}
       >
-        <InputNumber style={{ width: "100%" }} min={0} step={1000} />
+        <MoneyInput />
       </Form.Item>
-      <Form.Item label="Tannarx (so'm)" name="cost_price">
-        <InputNumber style={{ width: "100%" }} min={0} step={1000} />
+      <Form.Item label="Tannarx" name="cost_price">
+        <MoneyInput />
       </Form.Item>
       <Form.Item label="Qoldiq" name="stock_qty">
-        <InputNumber style={{ width: "100%" }} min={0} />
+        <NumberInput addonAfter="dona" />
       </Form.Item>
       <Form.Item label="Faol" name="is_active" valuePropName="checked" initialValue={true}>
         <Switch />
